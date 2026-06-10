@@ -13,7 +13,10 @@ The unofficial Enki intregration for Home Assistant.
 ## Known devices:
 
 <!-- start devices -->
-
+| Name | Image | Id | Coverage (%) | Tested |
+|---|---|---|---|---|
+|RGB E27 Light<br/>Lexman|<img src='./doc/devices/5d7df749f8bb0659f50d263d.webp'  width='100'/>|*5d7df749f8bb0659f50d263d*|![66%](https://progress-bar.xyz/66)|✅|
+|Alarm remote control<br/>Lexman|<img src='./doc/devices/5e8bad4e8eff8efc7c83ba49.jpg'  width='100'/>|*5e8bad4e8eff8efc7c83ba49*|![16%](https://progress-bar.xyz/16)|❌|
 <!-- end -->
 
 <!-- - Eglo V-link tunable white
@@ -29,10 +32,15 @@ Different device capabilities are curently being integrated to this custom compo
 <summary>Capabilities coverage</summary>
 
 <!-- start capabilities -->
-
 | Capability | Coverage (%) |
-| ---------- | ------------ |
-
+|---|---|
+|change_brightness|![100%](https://progress-bar.xyz/100)|
+|change_color_temperature|![100%](https://progress-bar.xyz/100)|
+|change_hue|![100%](https://progress-bar.xyz/100)|
+|change_light_state|![100%](https://progress-bar.xyz/100)|
+|change_saturation|![100%](https://progress-bar.xyz/100)|
+|check_light_state|![100%](https://progress-bar.xyz/100)|
+|check_lighting_remote_state|![100%](https://progress-bar.xyz/100)|
 <!-- end -->
 
 </details>
