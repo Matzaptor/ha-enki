@@ -8,18 +8,44 @@ The unofficial Enki intregration for Home Assistant.
 <img src="https://raw.githubusercontent.com/StephaneBranly/ha-enki/main/src/icon.png">
 
 > [!NOTE]
-> This repository is based on the excellent [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component) repository, which did not appear to be maintained in a consistent and sustainable manner.
-
-> [!NOTE]
 > This custom component is relatively new. It does not include all Enki components and may contain bugs.
 
-## Tested devices:
+## Known devices:
 
-- Eglo V-link tunable white
+<!-- start devices -->
+
+<!-- end -->
+
+<!-- - Eglo V-link tunable white
 - Inspire Cadix ceiling fan with light
-- Lexman RGBW Light
+- Lexman RGBW Light -->
 
-## Live API test
+## Supported capabilities
+
+Different device capabilities are curently being integrated to this custom component.
+
+<details>
+
+<summary>Capabilities coverage</summary>
+
+<!-- start capabilities -->
+
+| Capability | Coverage (%) |
+| ---------- | ------------ |
+
+<!-- end -->
+
+</details>
+
+## Connect your Enki account
+
+Reference your username and your password to connect to your Enki's account.
+
+You can specifiy a refresh rate.
+
+## Dev
+
+### Live API test
 
 This repository includes a standalone live diagnostics script that can authenticate against Enki
 and print available devices/actions from your account. This can help to develop and debug the
@@ -44,3 +70,6 @@ export ENKI_USER="your-email@example.com"
 export ENKI_PASSWORD="your-password"
 python tools/enki_api_live.py
 ```
+
+> [!NOTE]
+> This repository is based on the excellent [CyrilP/hass-enki-component](https://github.com/CyrilP/hass-enki-component) repository, which did not appear to be maintained in a consistent and sustainable manner.
