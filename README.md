@@ -15,8 +15,12 @@ The unofficial Enki intregration for Home Assistant.
 <!-- start devices -->
 | Name | Image | Id | Coverage (%) | Tested |
 |---|---|---|---|---|
+|Siren<br/>Lexman|<img src='./doc/devices/5f16c4aca80024b5af0561a1.jpg'  width='100'/>|*5f16c4aca80024b5af0561a1*|![16%](https://progress-bar.xyz/16)|❌|
 |RGB E27 Light<br/>Lexman|<img src='./doc/devices/5d7df749f8bb0659f50d263d.webp'  width='100'/>|*5d7df749f8bb0659f50d263d*|![66%](https://progress-bar.xyz/66)|✅|
 |Alarm remote control<br/>Lexman|<img src='./doc/devices/5e8bad4e8eff8efc7c83ba49.jpg'  width='100'/>|*5e8bad4e8eff8efc7c83ba49*|![16%](https://progress-bar.xyz/16)|❌|
+|Motion detector<br/>Lexman|<img src='./doc/devices/5e26cc33777472061d55e340.jpg'  width='100'/>|*5e26cc33777472061d55e340*|![33%](https://progress-bar.xyz/33)|❌|
+|Contact detector<br/>Lexman|<img src='./doc/devices/5f1192bc23b5dec92ac93eb4.jpg'  width='100'/>|*5f1192bc23b5dec92ac93eb4*|![10%](https://progress-bar.xyz/10)|❌|
+|Connected thermometer<br/>Sedea|<img src='./doc/devices/6633842c9f53b36a99838c94.webp'  width='100'/>|*6633842c9f53b36a99838c94*|![100%](https://progress-bar.xyz/100)|✅|
 <!-- end -->
 
 <!-- - Eglo V-link tunable white
@@ -39,6 +43,9 @@ Different device capabilities are curently being integrated to this custom compo
 |change_hue|![100%](https://progress-bar.xyz/100)|
 |change_light_state|![100%](https://progress-bar.xyz/100)|
 |change_saturation|![100%](https://progress-bar.xyz/100)|
+|check_battery_health|![100%](https://progress-bar.xyz/100)|
+|check_current_humidity|![100%](https://progress-bar.xyz/100)|
+|check_current_temperature|![100%](https://progress-bar.xyz/100)|
 |check_light_state|![100%](https://progress-bar.xyz/100)|
 |check_lighting_remote_state|![100%](https://progress-bar.xyz/100)|
 <!-- end -->
