@@ -16,10 +16,10 @@ The unofficial Enki intregration for Home Assistant.
 | Name | Image | Id | Coverage (%) | Tested |
 |---|---|---|---|---|
 |Siren<br/>Lexman|<img src='./doc/devices/5f16c4aca80024b5af0561a1.jpg'  width='100'/>|*5f16c4aca80024b5af0561a1*|![16%](https://progress-bar.xyz/16)|❌|
-|Outlet 16A, 3680A<br/>Lexman|<img src='./doc/devices/5e258991b472bf9d87b8483f.webp'  width='100'/>|*5e258991b472bf9d87b8483f*|![28%](https://progress-bar.xyz/28)|❌|
+|Outlet 16A, 3680A<br/>Lexman|<img src='./doc/devices/5e258991b472bf9d87b8483f.webp'  width='100'/>|*5e258991b472bf9d87b8483f*|![28%](https://progress-bar.xyz/28)|✅|
 |RGB E27 Light<br/>Lexman|<img src='./doc/devices/5d7df749f8bb0659f50d263d.webp'  width='100'/>|*5d7df749f8bb0659f50d263d*|![44%](https://progress-bar.xyz/44)|✅|
-|Motion detector<br/>Lexman|<img src='./doc/devices/5e26cc33777472061d55e340.jpg'  width='100'/>|*5e26cc33777472061d55e340*|![33%](https://progress-bar.xyz/33)|❌|
-|Contact detector<br/>Lexman|<img src='./doc/devices/5f1192bc23b5dec92ac93eb4.jpg'  width='100'/>|*5f1192bc23b5dec92ac93eb4*|![10%](https://progress-bar.xyz/10)|❌|
+|Motion detector<br/>Lexman|<img src='./doc/devices/5e26cc33777472061d55e340.jpg'  width='100'/>|*5e26cc33777472061d55e340*|![100%](https://progress-bar.xyz/100)|✅|
+|Contact detector<br/>Lexman|<img src='./doc/devices/5f1192bc23b5dec92ac93eb4.jpg'  width='100'/>|*5f1192bc23b5dec92ac93eb4*|![90%](https://progress-bar.xyz/90)|✅|
 |Connected thermometer<br/>Sedea|<img src='./doc/devices/6633842c9f53b36a99838c94.webp'  width='100'/>|*6633842c9f53b36a99838c94*|![100%](https://progress-bar.xyz/100)|✅|
 <!-- end -->
 
@@ -54,6 +54,16 @@ Different device capabilities are curently being integrated to this custom compo
 |switch_electrical_power|![100%](https://progress-bar.xyz/100)|
 |check_electrical_power|![100%](https://progress-bar.xyz/100)|
 |check_battery_health|![100%](https://progress-bar.xyz/100)|
+|check_motion_detection|![100%](https://progress-bar.xyz/100)|
+|check_motion_detector_state|![100%](https://progress-bar.xyz/100)|
+|check_contact_sensor_state|![100%](https://progress-bar.xyz/100)|
+|check_vibration_detection|![100%](https://progress-bar.xyz/100)|
+|check_vibration_detection_activation|![100%](https://progress-bar.xyz/100)|
+|activate_vibration_detection|![100%](https://progress-bar.xyz/100)|
+|check_contact_detection_activation|![100%](https://progress-bar.xyz/100)|
+|activate_contact_detection|![100%](https://progress-bar.xyz/100)|
+|check_vibration_sensibility_level|![100%](https://progress-bar.xyz/100)|
+|change_vibration_sensibility_level|![100%](https://progress-bar.xyz/100)|
 <!-- end -->
 
 </details>
