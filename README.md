@@ -20,7 +20,7 @@ The unofficial Enki intregration for Home Assistant.
 <!-- start devices -->
 | Name | Image | Id | Coverage (%) | Tested |
 |---|---|---|---|---|
-|Siren<br/>Lexman|<img src='./doc/devices/5f16c4aca80024b5af0561a1.jpg'  width='100'/>|*5f16c4aca80024b5af0561a1*|![16%](https://progress-bar.xyz/16)|❌|
+|Siren<br/>Lexman|<img src='./doc/devices/5f16c4aca80024b5af0561a1.jpg'  width='100'/>|*5f16c4aca80024b5af0561a1*|![50%](https://progress-bar.xyz/50)|❌|
 |Outlet 16A, 3680A<br/>Lexman|<img src='./doc/devices/5e258991b472bf9d87b8483f.webp'  width='100'/>|*5e258991b472bf9d87b8483f*|![28%](https://progress-bar.xyz/28)|✅|
 |RGB E27 Light<br/>Lexman|<img src='./doc/devices/5d7df749f8bb0659f50d263d.webp'  width='100'/>|*5d7df749f8bb0659f50d263d*|![44%](https://progress-bar.xyz/44)|✅|
 |Motion detector<br/>Lexman|<img src='./doc/devices/5e26cc33777472061d55e340.jpg'  width='100'/>|*5e26cc33777472061d55e340*|![100%](https://progress-bar.xyz/100)|✅|
@@ -69,6 +69,8 @@ Different device capabilities are curently being integrated to this custom compo
 |activate_contact_detection|![100%](https://progress-bar.xyz/100)|
 |check_vibration_sensibility_level|![100%](https://progress-bar.xyz/100)|
 |change_vibration_sensibility_level|![100%](https://progress-bar.xyz/100)|
+|check_siren_global_state|![100%](https://progress-bar.xyz/100)|
+|switch_siren_status|![100%](https://progress-bar.xyz/100)|
 <!-- end -->
 
 </details>
