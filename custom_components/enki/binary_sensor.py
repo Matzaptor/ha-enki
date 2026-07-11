@@ -57,7 +57,6 @@ class EnkiBinarySensor(EnkiBaseEntity, BinarySensorEntity):
     def is_on(self) -> float | None:
         """Return the binary_sensor value."""
         getv = self.coordinator.get_device_parameter(self.node_id, self._key)
-        LOGGER.debug(f"MOTION SENSOR {getv}")
         value = getv.get('lastReportedValue', None)
         if self._attr_conversion_table:
             value = self._attr_conversion_table.get(value, None)
@@ -120,5 +119,4 @@ def _build_binary_sensor_entities(coordinator: EnkiCoordinator, device: dict[str
             )
         )
 
-    LOGGER.debug(f"created {len(binary_sensors)} binary_sensor entities for device {device['nodeId']}")
     return binary_sensors
