@@ -50,6 +50,8 @@ Different device capabilities are curently being integrated to this custom compo
 |ENKI_HOMES_LIST|![100%](https://progress-bar.xyz/100)|
 |ENKI_BFF_ITEMS|![100%](https://progress-bar.xyz/100)|
 |ENKI_NODE_CAPABILITY|![100%](https://progress-bar.xyz/100)|
+|ENKI_SCENARIO_LIST_CAPABILITY|![100%](https://progress-bar.xyz/100)|
+|ENKI_SCENARIO_ACTIVATE_CAPABILITY|![100%](https://progress-bar.xyz/100)|
 |change_light_state|![100%](https://progress-bar.xyz/100)|
 |check_light_state|![100%](https://progress-bar.xyz/100)|
 |check_current_temperature|![100%](https://progress-bar.xyz/100)|
