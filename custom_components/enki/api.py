@@ -150,8 +150,8 @@ class API:
             self.merge_properties(device, { 'scenarios':  scenarios})
             return device
         
-        if device.get('type', None) != 'physicalDevice':
-            return device
+        # if device.get('type', None) != 'physicalDevice':
+        #     return device
         
         node_id = device.get('nodeId', None)
         
