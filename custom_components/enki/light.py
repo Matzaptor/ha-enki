@@ -11,7 +11,23 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import EnkiConfigEntry
 from .base import EnkiBaseEntity
 from .coordinator import EnkiCoordinator
-from .const import ENKI_CHANGE_LIGHT_STATE, ENKI_CHECK_ELECTRICAL_POWER, ENKI_CHECK_LIGHT_STATE
+from .const import (
+    ENKI_CHANGE_LIGHT_STATE,
+    ENKI_CHECK_CHANNEL1_ELECTRICAL_POWER,
+    ENKI_CHECK_CHANNEL2_ELECTRICAL_POWER,
+    ENKI_CHECK_ELECTRICAL_POWER,
+    ENKI_CHECK_LIGHT_STATE,
+    ENKI_SWITCH_CHANNEL1_ELECTRICAL_POWER,
+    ENKI_SWITCH_CHANNEL2_ELECTRICAL_POWER,
+)
+
+# Per-channel power capabilities (documented in doc/api_rest_reference.md, section
+# "Power Management / Power") for devices that expose independent zones (e.g. a dual
+# light ceiling fan) instead of a single shared switch_electrical_power/check_light_state.
+_CHANNEL_POWER_CAPABILITIES = {
+    1: (ENKI_CHECK_CHANNEL1_ELECTRICAL_POWER, ENKI_SWITCH_CHANNEL1_ELECTRICAL_POWER),
+    2: (ENKI_CHECK_CHANNEL2_ELECTRICAL_POWER, ENKI_SWITCH_CHANNEL2_ELECTRICAL_POWER),
+}
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -45,11 +61,13 @@ class EnkiLight(EnkiBaseEntity, LightEntity):
         device: dict[str, Any],
         parameter: str,
         endpoint_id: int | None = None,
+        channel_number: int | None = None,
     ) -> None:
         """Initialise entity."""
         super().__init__(coordinator, device)
         self._device = device
         self._endpoint_id = endpoint_id
+        self._channel_number = channel_number
         self._color_temp_values = []
         self.parameter = parameter
         self._attr_supported_color_modes = set()  # instance-level to avoid class mutation
@@ -109,9 +127,22 @@ class EnkiLight(EnkiBaseEntity, LightEntity):
         if self._attr_color_mode is None:
             self._attr_color_mode = ColorMode.UNKNOWN
 
+    def _channel_power_capabilities(self):
+        """Return (check, switch) channel capabilities if this device exposes them for this zone."""
+        return _channel_power_capabilities(self._device, self._channel_number)
+
     @property
     def is_on(self) -> bool | None:
         """Return if the binary sensor is on."""
+        channel_capabilities = self._channel_power_capabilities()
+        if channel_capabilities is not None:
+            check_capability, _ = channel_capabilities
+            value = self.coordinator.get_device_parameter(self.node_id, check_capability.name)
+            if isinstance(value, dict):
+                power = value.get("lastReportedValue")
+                if isinstance(power, str):
+                    return power == "ON"
+
         if self._endpoint_id is not None:
             endpoints = self.coordinator.get_device_parameter(self.node_id, ENKI_CHECK_ELECTRICAL_POWER.name).get('endpoints', [])
             if isinstance(endpoints, list):
@@ -194,20 +225,24 @@ class EnkiLight(EnkiBaseEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        # TODO: switch_electrical_power turns on ALL endpoints of the device (lights, fan, etc).
-        # Until the API supports per-endpoint control without side-effects, use change_light_state
-        # for all light entities regardless of whether they have an endpoint_id. This will turn on
-        # all the lights but at least will not turn on the fan or other non-light endpoints.
-        # Additional workaround: if the light endpoints are in mixed state (one ON, another OFF),
-        # force an OFF->ON transition so turn_on is not ignored when global power is already ON.
-        await self._mixed_endpoint_workaround()
+        channel_capabilities = self._channel_power_capabilities()
 
-        changes: dict[str, Any] = {"power": "ON"}
+        changes: dict[str, Any] = {}
+        if channel_capabilities is None:
+            # TODO: switch_electrical_power turns on ALL endpoints of the device (lights, fan, etc).
+            # Until the API supports per-endpoint control without side-effects, use change_light_state
+            # for all light entities regardless of whether they have an endpoint_id. This will turn on
+            # all the lights but at least will not turn on the fan or other non-light endpoints.
+            # Additional workaround: if the light endpoints are in mixed state (one ON, another OFF),
+            # force an OFF->ON transition so turn_on is not ignored when global power is already ON.
+            await self._mixed_endpoint_workaround()
+            changes["power"] = "ON"
+
         if "brightness" in kwargs:
             ha_value = kwargs["brightness"]
             value = round(ha_value / 255, 2)
             changes["brightness"] = value
-        
+
         if "color_temp_kelvin" in kwargs:
             new_color_mode = 'ct'
             ha_value = kwargs["color_temp_kelvin"]
@@ -225,12 +260,26 @@ class EnkiLight(EnkiBaseEntity, LightEntity):
             changes["saturation"] = saturation_value
             self._attr_color_mode = ColorMode.HS
 
-        self.update_data_power_light_endpoints("ON")
-        await self.coordinator.api.query_endpoint(self._device["homeId"], self._device["nodeId"], ENKI_CHANGE_LIGHT_STATE, changes, ENKI_CHECK_LIGHT_STATE)
-        self.coordinator.update_data(self.node_id, {ENKI_CHECK_LIGHT_STATE.name: {"lastReportedValue": changes}})
-        
+        if channel_capabilities is not None:
+            check_capability, switch_capability = channel_capabilities
+            await self.coordinator.api.query_endpoint(self._device["homeId"], self._device["nodeId"], switch_capability, {"value": "ON"})
+            self.coordinator.update_data(self.node_id, {check_capability.name: {"lastReportedValue": "ON"}})
+        else:
+            self.update_data_power_light_endpoints("ON")
+
+        if changes:
+            await self.coordinator.api.query_endpoint(self._device["homeId"], self._device["nodeId"], ENKI_CHANGE_LIGHT_STATE, changes, ENKI_CHECK_LIGHT_STATE)
+            self.coordinator.update_data(self.node_id, {ENKI_CHECK_LIGHT_STATE.name: {"lastReportedValue": changes}})
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
+        channel_capabilities = self._channel_power_capabilities()
+        if channel_capabilities is not None:
+            check_capability, switch_capability = channel_capabilities
+            await self.coordinator.api.query_endpoint(self._device["homeId"], self._device["nodeId"], switch_capability, {"value": "OFF"})
+            self.coordinator.update_data(self.node_id, {check_capability.name: {"lastReportedValue": "OFF"}})
+            return
+
         # TODO: switch_electrical_power turns off ALL endpoints of the device (lights, fan, etc).
         # Until the API supports per-endpoint control without side-effects, use change_light_state
         # for all light entities regardless of whether they have an endpoint_id. This will turn off
@@ -293,7 +342,13 @@ def _build_light_entities(coordinator: EnkiCoordinator, device: dict[str, Any]) 
     endpoint_ids = _main_change_capability_endpoint_ids(device)
     if endpoint_ids:
         return [
-            EnkiLight(coordinator, device, parameter=f"light_{chr(ord('a') + i)}", endpoint_id=endpoint_id)
+            EnkiLight(
+                coordinator,
+                device,
+                parameter=f"light_{chr(ord('a') + i)}",
+                endpoint_id=endpoint_id,
+                channel_number=i + 1,
+            )
             for i, endpoint_id in enumerate(endpoint_ids)
         ]
 
@@ -323,6 +378,19 @@ def _main_change_capability_endpoint_ids(device: dict[str, Any]) -> list[int]:
                 endpoint_ids.add(endpoint_id)
 
     return sorted(endpoint_ids)
+
+
+def _channel_power_capabilities(device: dict[str, Any], channel_number: int | None):
+    """Return (check, switch) channel capabilities if the device declares them for this zone."""
+    if channel_number is None:
+        return None
+    pair = _CHANNEL_POWER_CAPABILITIES.get(channel_number)
+    if pair is None:
+        return None
+    _, switch_capability = pair
+    if switch_capability.name not in _capabilities_set(device):
+        return None
+    return pair
 
 
 def _capabilities_set(device: dict[str, Any]) -> set[str]:

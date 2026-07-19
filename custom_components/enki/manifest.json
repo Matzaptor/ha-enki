@@ -8,5 +8,5 @@
   "issue_tracker": "https://github.com/StephaneBranly/ha-enki/issues",
   "loggers": ["enki"],
   "requirements": [],
-  "version": "v0.1"
+  "version": "v0.1-debug"
 }
