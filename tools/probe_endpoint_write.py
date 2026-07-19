@@ -1,13 +1,15 @@
 """One-off diagnostic: does switch_electrical_power accept a per-endpoint target?
 
 Not part of the integration; run manually, same credentials as enki_api_live.py.
-Toggles electrical power on a single node's endpoints using a few candidate
-payload shapes and prints the resulting check_electrical_power response after
-each attempt, so you can compare against what you physically observe (which
-light/zone actually reacted).
+Toggles electrical power on a single node's endpoints, one field-name candidate
+at a time, and asks you to type what you physically observed after each step.
+Prints ONE compact summary table at the end -- that's the only thing you need
+to copy/paste back.
 
 Usage:
     python tools/probe_endpoint_write.py --user EMAIL --password PASSWORD --node-id NODE_ID
+    python tools/probe_endpoint_write.py ... --field id   # try a different field name
+    python tools/probe_endpoint_write.py ... --wait 5     # seconds between action and re-check
 """
 
 from __future__ import annotations
@@ -15,7 +17,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib.util
-import json
 import os
 import sys
 import types
@@ -52,15 +53,24 @@ def _load_enki_api_class():
     return api_module.API, sys.modules[const_module_name]
 
 
-async def _run(user: str, password: str, node_id: str) -> None:
+def _fmt_endpoints(endpoints: list[dict[str, Any]]) -> str:
+    parts = []
+    for e in endpoints:
+        if not isinstance(e, dict):
+            continue
+        lrv = e.get("lastReportedValue")
+        power = lrv if isinstance(lrv, str) else (lrv.get("power") if isinstance(lrv, dict) else None)
+        parts.append(f"{e.get('id')}={power}")
+    return "[" + " ".join(parts) + "]"
+
+
+async def _run(user: str, password: str, node_id: str, field: str, wait: float) -> None:
     api_cls, const = _load_enki_api_class()
     api = api_cls(user, password)
 
-    connected = await api.connect()
-    if connected is not True:
+    if await api.connect() is not True:
         raise RuntimeError("Login failed")
 
-    # Find the home_id owning this node by scanning all homes' devices.
     home_id = None
     for hid in await api.get_homes():
         for device in await api.get_items_in_section_for_home(hid):
@@ -69,60 +79,61 @@ async def _run(user: str, password: str, node_id: str) -> None:
                 break
         if home_id:
             break
-
     if not home_id:
         raise RuntimeError(f"Could not find home_id for node {node_id}")
-
-    print(f"home_id={home_id} node_id={node_id}\n")
 
     async def get_endpoints() -> list[dict[str, Any]]:
         resp = await api.query_endpoint(home_id, node_id, const.ENKI_CHECK_ELECTRICAL_POWER)
         endpoints = resp.get("endpoints", [])
         return endpoints if isinstance(endpoints, list) else []
 
-    async def show_state(label: str) -> list[dict[str, Any]]:
-        endpoints = await get_endpoints()
-        print(f"--- {label} ---")
-        print(json.dumps(endpoints, indent=2))
-        print()
-        return endpoints
-
-    def endpoint_power(endpoints: list[dict[str, Any]], target_id: Any) -> str | None:
+    def power_of(endpoints: list[dict[str, Any]], target_id: Any) -> str | None:
         for e in endpoints:
             if isinstance(e, dict) and e.get("id") == target_id:
                 lrv = e.get("lastReportedValue")
-                if isinstance(lrv, str):
-                    return lrv
-                if isinstance(lrv, dict):
-                    return lrv.get("power")
+                return lrv if isinstance(lrv, str) else (lrv.get("power") if isinstance(lrv, dict) else None)
         return None
 
-    endpoints = await show_state("BEFORE any change")
+    endpoints = await get_endpoints()
     if not endpoints:
-        print("No 'endpoints' array in check_electrical_power response — nothing to target.")
+        print("No 'endpoints' array in check_electrical_power response -- nothing to target.")
         return
 
     endpoint_ids = [e.get("id") for e in endpoints if isinstance(e, dict) and e.get("id") is not None]
-    print(f"Found endpoint ids: {endpoint_ids}\n")
+    print(f"field={field!r}  wait={wait}s  endpoint_ids={endpoint_ids}")
+    print(f"BEFORE {_fmt_endpoints(endpoints)}\n")
 
-    field_name_candidates = ["endpointId", "endpoint", "id", "endpoint_id"]
-
+    rows: list[str] = []
     for target_id in endpoint_ids:
-        for field in field_name_candidates:
-            current = endpoint_power(endpoints, target_id)
-            new_value = "OFF" if current == "ON" else "ON"
-            payload = {"value": new_value, field: target_id}
-            print(f">>> POST switch_electrical_power {payload}  (endpoint {target_id} currently {current})")
-            try:
-                await api.query_endpoint(
-                    home_id, node_id, const.ENKI_SWITCH_ELECTRICAL_POWER, payload
-                )
-            except Exception as exc:  # noqa: BLE001
-                print(f"    -> request failed: {exc}\n")
-                continue
-            await asyncio.sleep(2)
-            endpoints = await show_state(f"AFTER targeting endpoint {target_id} via '{field}' ({new_value})")
-            input("Press Enter once you noted which physical light (if any) changed... ")
+        current = power_of(endpoints, target_id)
+        new_value = "OFF" if current == "ON" else "ON"
+        payload = {"value": new_value, field: target_id}
+
+        before_str = _fmt_endpoints(endpoints)
+        print(f">>> target={target_id} field={field} value={new_value}  (was {current})")
+        try:
+            await api.query_endpoint(home_id, node_id, const.ENKI_SWITCH_ELECTRICAL_POWER, payload)
+        except Exception as exc:  # noqa: BLE001
+            print(f"    request failed: {exc}\n")
+            rows.append(f"target={target_id} field={field} -> REQUEST FAILED: {exc}")
+            continue
+
+        await asyncio.sleep(wait)
+        endpoints = await get_endpoints()
+        after_str = _fmt_endpoints(endpoints)
+        print(f"    before={before_str} after={after_str}")
+
+        observed = input("    What did you SEE physically change? [A/B/AB/FAN/NONE/other]: ").strip() or "?"
+        rows.append(
+            f"target={target_id} field={field} value={new_value} | before={before_str} after={after_str} | observed={observed}"
+        )
+        print()
+
+    print("=" * 20 + " SUMMARY (copy from here) " + "=" * 20)
+    print(f"node={node_id} field={field!r} wait={wait}s")
+    for row in rows:
+        print(row)
+    print("=" * 67)
 
 
 def main() -> int:
@@ -130,13 +141,20 @@ def main() -> int:
     parser.add_argument("--user", default=os.getenv("ENKI_USER"))
     parser.add_argument("--password", default=os.getenv("ENKI_PASSWORD"))
     parser.add_argument("--node-id", required=True, help="nodeId of the device to probe")
+    parser.add_argument(
+        "--field",
+        default="endpointId",
+        choices=["endpointId", "endpoint", "id", "endpoint_id"],
+        help="candidate field name to try in the switch_electrical_power payload (default: endpointId)",
+    )
+    parser.add_argument("--wait", type=float, default=4.0, help="seconds to wait before re-checking state (default: 4)")
     args = parser.parse_args()
 
     if not args.user or not args.password:
         print("Missing credentials.")
         return 2
 
-    asyncio.run(_run(args.user, args.password, args.node_id))
+    asyncio.run(_run(args.user, args.password, args.node_id, args.field, args.wait))
     return 0
 
 
