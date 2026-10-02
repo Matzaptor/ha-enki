@@ -18,15 +18,15 @@ class EnkiCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        api: API,
-        device: dict[str, Any],
-        interval: int,
-        interval_overrides: int,
-        interval_store: Store,
+        api: API = None,
+        device: dict[str, Any] = None,
+        interval: int = None,
+        interval_overrides: int = None,
+        interval_store: Store = None,
     ) -> None:
         """Initialize a coordinator dedicated to one device."""
         self.device = device
-        self.node_id = str(device["nodeId"])
+        self.node_id = str(device["nodeId"]) if device else None
         self.api = api
         self.poll_interval = interval
         self._device_interval_overrides = interval_overrides
@@ -40,7 +40,8 @@ class EnkiCoordinator(DataUpdateCoordinator):
             update_method=self.async_update_data,
             update_interval=None,
         )
-        self._reschedule_device_update(interval)
+        if self.poll_interval is not None:
+            self._reschedule_device_update(interval) 
 
     async def _async_save_device_update_intervals(self) -> None:
         """Save user-configured device intervals to Home Assistant storage."""

@@ -84,7 +84,7 @@ class EnkiBaseEntity(CoordinatorEntity):
                 )
             },
             serial_number=self.coordinator.get_device_parameter("eui64"),
-            via_device=(DOMAIN, self.coordinator.get_device_parameter("parentId"),),
+            via_device=(DOMAIN, self.coordinator.get_device_parameter("parentId"),) if self.coordinator.get_device_parameter("parentId") else None,
         )
 
     @property
