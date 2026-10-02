@@ -24,10 +24,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up switch entities."""
-    coordinator: EnkiCoordinator = config_entry.runtime_data.coordinator
-
     switch = [
         entity
+        for coordinator in config_entry.runtime_data.coordinators.values()
         for device in coordinator.data
         for entity in _build_switch_entities(coordinator, device)
     ]
@@ -61,18 +60,18 @@ class EnkiSwitch(EnkiBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return if outlet is on."""
-        power = self.coordinator.get_device_capability_parameter(self.node_id, self._attr_check_capability)
+        power = self.coordinator.get_device_capability_parameter(self._attr_check_capability)
         if isinstance(power, str):
             return power == "ON"
         return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.coordinator.api.query_endpoint(self.device["homeId"], self.node_id, self._attr_switch_capability, { "value": 'ON' })
-        self.coordinator.update_data(self.node_id, {self._attr_check_capability.name: {"lastReportedValue": 'ON'}})
+        self.coordinator.update_data({self._attr_check_capability.name: {"lastReportedValue": 'ON'}})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.api.query_endpoint(self.device["homeId"], self.node_id, self._attr_switch_capability, { "value": 'OFF' })
-        self.coordinator.update_data(self.node_id,{self._attr_check_capability.name: {"lastReportedValue": 'OFF'}})
+        self.coordinator.update_data({self._attr_check_capability.name: {"lastReportedValue": 'OFF'}})
 
 def _build_switch_entities(coordinator: EnkiCoordinator, device: dict[str, Any]) -> list[EnkiSwitch]:
     """Create power production sensor for inverter devices."""

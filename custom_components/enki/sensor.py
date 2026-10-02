@@ -24,10 +24,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up sensor entities."""
-    coordinator: EnkiCoordinator = config_entry.runtime_data.coordinator
-
     sensors = [
         entity
+        for coordinator in config_entry.runtime_data.coordinators.values()
         for device in coordinator.data
         for entity in _build_sensor_entities(coordinator, device)
     ]
@@ -64,7 +63,7 @@ class EnkiSensor(EnkiBaseEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensor value."""
-        value = self.coordinator.get_device_parameter(self.node_id, self._key).get('lastReportedValue', None)
+        value = self.coordinator.get_device_parameter(self._key).get('lastReportedValue', None)
         if self._attr_conversion_table:
             value = self._attr_conversion_table.get(value, None)
         if value is None:
