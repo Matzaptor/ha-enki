@@ -24,6 +24,9 @@
           "username": "Adresse e-mail",
           "password": "Mot de passe",
           "scan_interval": "Intervalle de rafraîchissement (secondes)"
+        },
+        "data_description": {
+          "password": "Laissez vide pour conserver le mot de passe actuel."
         }
       }
     },

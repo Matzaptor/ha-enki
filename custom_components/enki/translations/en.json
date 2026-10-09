@@ -24,6 +24,9 @@
           "username": "Email address",
           "password": "Password",
           "scan_interval": "Refresh interval (seconds)"
+        },
+        "data_description": {
+          "password": "Leave empty to keep the current password."
         }
       }
     },
