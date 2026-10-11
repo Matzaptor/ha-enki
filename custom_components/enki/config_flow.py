@@ -14,6 +14,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -23,10 +28,15 @@ from .const import (
 
 DOCUMENTATION_URL = "https://github.com/StephaneBranly/ha-enki"
 
+# Always render the password as a masked field.
+PASSWORD_SELECTOR = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+)
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
     }
 )
 
@@ -179,10 +189,19 @@ class EnkiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
+            # The stored password is never sent back to the frontend, so the
+            # field is left empty in the form: an empty value keeps the
+            # current password.
+            new_data = {
+                **user_input,
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD)
+                or config_entry.data[CONF_PASSWORD],
+            }
+
             try:
                 await validate_input(
                     self.hass,
-                    user_input,
+                    new_data,
                 )
 
             except CannotConnect:
@@ -203,7 +222,7 @@ class EnkiConfigFlow(ConfigFlow, domain=DOMAIN):
                     unique_id=config_entry.unique_id,
                     data={
                         **config_entry.data,
-                        **user_input,
+                        **new_data,
                     },
                     reason="reconfigure_successful",
                 )
@@ -218,9 +237,9 @@ class EnkiConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_USERNAME
                         ],
                     ): str,
-                    vol.Required(
+                    vol.Optional(
                         CONF_PASSWORD
-                    ): str,
+                    ): PASSWORD_SELECTOR,
                     vol.Required(
                         CONF_SCAN_INTERVAL,
                         default=config_entry.data.get(
