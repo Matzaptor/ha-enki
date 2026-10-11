@@ -102,7 +102,9 @@ class EnkiCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         self.device["update_interval"] = self.poll_interval
-        return self.device
+        # Same shape as the initial data (a one-element list): the platforms
+        # iterate over coordinator.data when they set up their entities.
+        return [self.device]
 
     # ----------------------------------------------------------------------------
     # Here we add some custom functions on our data coordinator to be called
@@ -148,7 +150,7 @@ class EnkiCoordinator(DataUpdateCoordinator):
                     target[key] = value
 
         _merge_dicts(device, updated_values)
-        self.async_set_updated_data(device)
+        self.async_set_updated_data([device])
 
     def update_endpoint_power(self, endpoint_id: int, power: str) -> None:
         """Optimistically update power state for a specific electricalEndpoints entry."""
@@ -160,4 +162,4 @@ class EnkiCoordinator(DataUpdateCoordinator):
                 if ep.get("id") == endpoint_id:
                     ep["lastReportedValue"] = power
                     break
-        self.async_set_updated_data(self.device)
+        self.async_set_updated_data([self.device])
