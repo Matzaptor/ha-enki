@@ -240,12 +240,6 @@ async def async_setup_entry(
 
         coordinators[node_id] = coordinator
 
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(
-            _async_update_listener
-        )
-    )
-
     config_entry.runtime_data = RuntimeData(
         coordinators=coordinators,
         gateways=gateways,
@@ -265,17 +259,6 @@ async def async_setup_entry(
     )
 
     return True
-
-
-async def _async_update_listener(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-) -> None:
-    """Handle config entry updates."""
-
-    await hass.config_entries.async_reload(
-        config_entry.entry_id
-    )
 
 
 async def async_remove_config_entry_device(
