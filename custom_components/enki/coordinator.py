@@ -3,13 +3,13 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import API, APIAuthError
-from .const import ENKI_CAPABILITY, ENKI_CHECK_ELECTRICAL_POWER, LOGGER
+from .const import DOMAIN, ENKI_CAPABILITY, ENKI_CHECK_ELECTRICAL_POWER, LOGGER
 
 class EnkiCoordinator(DataUpdateCoordinator):
     """Coordinate refreshes for one Enki device."""
