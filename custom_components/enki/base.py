@@ -13,11 +13,18 @@ and what additional properties and methods you need to add for each entity type.
 from typing import Any
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EnkiCoordinator
+
+# Home Assistant 2026.8 deprecates `via_device` (a (domain, identifier) tuple) in
+# favor of `via_device_id` (the id of the parent device in the device registry).
+# Older versions only know `via_device`.
+SUPPORTS_VIA_DEVICE_ID = "via_device_id" in DeviceInfo.__annotations__
+
 
 class EnkiBaseEntity(CoordinatorEntity):
     """Base Entity Class.
@@ -84,8 +91,31 @@ class EnkiBaseEntity(CoordinatorEntity):
                 )
             },
             serial_number=self.coordinator.get_device_parameter("eui64"),
-            via_device=(DOMAIN, self.coordinator.get_device_parameter("parentId"),) if self.coordinator.get_device_parameter("parentId") else None,
+            **self._via_device_info(),
         )
+
+    def _via_device_info(self) -> dict[str, Any]:
+        """Return the DeviceInfo keys linking this device to its parent."""
+        parent_id = self.coordinator.get_device_parameter("parentId")
+        if not parent_id:
+            return {}
+
+        if not SUPPORTS_VIA_DEVICE_ID:
+            return {"via_device": (DOMAIN, parent_id)}
+
+        config_entry = self.coordinator.config_entry
+        if self.hass is None or config_entry is None:
+            return {}
+
+        registry = dr.async_get(self.hass)
+        identifier = (DOMAIN, parent_id)
+        if hasattr(registry, "async_get_device_by_identifier"):
+            parent = registry.async_get_device_by_identifier(
+                identifier, config_entry.entry_id
+            )
+        else:
+            parent = registry.async_get_device(identifiers={identifier})
+        return {"via_device_id": parent.id} if parent else {}
 
     @property
     def name(self) -> str:
